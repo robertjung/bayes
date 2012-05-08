@@ -1,7 +1,10 @@
-require  'redis/connection/hiredis'
+require 'redis/connection/hiredis'
 require 'redis'
+require 'digest/md5'
 
 class Classifier
+
+  BLOOMSIZE = 2**24
 
   def initialize
     @r = Redis.new(host: "localhost", port: 6379)
@@ -22,84 +25,67 @@ class Classifier
   def train words, categories, options = { weight: 1 }
     categories.each do |category|
       words.each do |word|
-        @r.hincrby word, category, options[:weight]
+        indexes(word).each do |index|
+          update_index category, index
+        end
       end
       @r.hincrby "CATEGORIES", category, options[:weight]
     end
   end
 
-  def category_count category
-    @r.hget("CATEGORIES", category).to_i
+  def indexes(word)
+    [ word, word+"2", word+"3"].map{|word| Digest::MD5.hexdigest(word).to_i(16) }.map{|index| index % BLOOMSIZE}
   end
 
-  def categories_total
-    @r.hvals("CATEGORIES").inject(0){|sum, val| sum += val.to_i}.to_f
+  def update_index(category, index)
+    oldvalue = @r.getrange(category, index, index)
+    value = 1
+    value = oldvalue.getbyte(0) + 1 if oldvalue && oldvalue.length > 0
+    @r.setrange category, index, value.chr
   end
 
-  def categories_total_for_word word
-    @r.hvals(word).inject(0){|sum, val| sum += val.to_i}.to_f
+#############################
+  # BLOOMfilter - implementation 1
+  #
+  def bloom_get_wordcount(category, word)
+    indexes(word).map { |index|
+      val = @r.getrange(category, index, index)
+      val.length > 0 ? val.getbyte(0) : 0
+    }.min
   end
 
-  def category_for_word(word, category)
-    @r.hget(word, category).to_f
-  end
-
-  def word_prob word, category
-    ccount = category_count(category)
-    ccount > 0 ? category_for_word(word, category) / ccount : 0.0
-  end
-
-  def weighted_word_prob(word, category, options = {weight: 1.0, ap: 0.5})
-    totals = categories_total_for_word word
-    ((options[:weight]*options[:ap]) + (totals*word_prob(word, category))) / (options[:weight] + totals)
-  end
-
-  def docprob words, category
-    words.inject(1.0){ |prod, word| prod *= weighted_word_prob(word, category) }
-  end
-
-  def bayes phrase, category
-    (category_count(category) / categories_total) * docprob(phrase_to_words(phrase), category)
-  end
-
-  def result phrase
-    @r.hkeys("CATEGORIES").each{|category|
-      bayes phrase, category
-    }
-  end
-
-##############################
-  # now for real: ugly, but fast.
-
-  def fast_result_for_word word_category_data, category, categories_data, totals
+  def bloom_result_for_word word_count, category_count, totals
     weight, ap = 1.0, 0.5
-    category_count = categories_data[category]
     return 0.0 unless category_count
-    word_prob = word_category_data[category].to_f / category_count.to_f
+    word_prob = word_count.to_f / category_count.to_f
 
     ((weight * ap) + (totals * word_prob)) / (weight + totals)
   end
 
-  def fast_result phrase
+  def bloom_result phrase
     total_category_data = @r.hgetall "CATEGORIES"
     words = phrase_to_words(phrase)
-    word_data = words.inject({}) { |wd, word| wd[word] = @r.hgetall(word); wd }
 
+    totals = Hash.new(0.0)
+    word_counts = {}
     data = {}
+
     total_category_data.each_key do |category|
-      data[category] = words.inject(1.0) { |p, word| 
-        totals = word_data[word].inject(0){|sum, val| sum += val[1].to_i}
-        p *= fast_result_for_word(word_data[word], category, total_category_data, totals)
+      word_counts[category] = Hash.new(0.0)
+      words.each { |word|
+        word_counts[category][word] = bloom_get_wordcount(category, word)
+        totals[word] += word_counts[category][word]
       }
     end
 
-    total_category = total_category_data.inject(0){|sum, cat| sum += cat[1].to_i}
-    total_category_data.each_key { |category|
-      data[category] *= (total_category_data[category].to_f / total_category)
-    }
+    total_category_data.each_key do |category|
+      data[category] = words.inject(1.0) { |p, word|
+        p *= bloom_result_for_word(word_counts[category][word], total_category_data[category], totals[word])
+      }
+    end
+    max = data.values.max
+    max = 1.0/max
+    data.each_pair { |category, rank| data[category] *= max }
     data
   end
 end
-
-c=Classifier.new
-10.times { c.fast_result "buy you some viagra!" }
