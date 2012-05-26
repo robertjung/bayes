@@ -37,12 +37,12 @@ class Classifier
   end
 
   def train_phrase(phrase, categories)
-    train(phrase_to_words(phrase), categories)
+    train(phrase_to_features(phrase), categories)
   end
 
-  def train(words, categories)
+  def train(features, categories)
     categories.each do |category|
-      words.each { |word| update_word(word, category) }
+      features.each { |feature| update_feature(feature, category) }
       update_category(category)
     end
   end
@@ -50,13 +50,13 @@ class Classifier
   ###########################
   # access bloom filter data
 
-  def update_word(word, category)
-    indexes(word).each { |index| update_index(category, index) }
+  def update_feature(feature, category)
+    indexes(feature).each { |index| update_index(category, index) }
   end
 
-  def indexes(word)
-    [ word, word+"2", word+"3"].  map { |hash_word|
-        Digest::MD5.hexdigest(hash_word).to_i(16)
+  def indexes(feature)
+    [ feature, feature+"2", feature+"3"].  map { |hash_feature|
+        Digest::MD5.hexdigest(hash_feature).to_i(16)
       }.map { |index| index % @filter_size }
   end
 
@@ -119,7 +119,7 @@ class Classifier
   end
 
   def result phrase
-    features = phrase_to_words(phrase)
+    features = phrase_to_features(phrase)
     p_for_all(features)
   end
 
@@ -136,7 +136,7 @@ private
     "B:#{scope}:#{category}"
   end
 
-  def phrase_to_words(phrase)
+  def phrase_to_features(phrase)
     phrase.unpack('C*').pack('U*').gsub(/[^\w]/, " ").split.inject([]){|data, w| data << w.downcase}.uniq
   end
 end
