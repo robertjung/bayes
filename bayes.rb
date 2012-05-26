@@ -4,7 +4,7 @@ require 'digest/md5'
 
 class Classifier
 
-  attr_accessor :scope, :filter_size, :categories, :categories_total, :weight, :ap
+  attr_accessor :scope, :filter_size, :categories, :categories_total, :weight, :ap, :r
 
   BLOOMSIZE = 2**24
 
@@ -33,7 +33,7 @@ class Classifier
   # train
 
   def untrain_phrase(phrase, categories)
-    train_phrase(phrase, categories)
+    # train_phrase(phrase, categories)
   end
 
   def train_phrase(phrase, categories)
@@ -55,9 +55,9 @@ class Classifier
   end
 
   def indexes(word)
-    [ word, word+"2", word+"3"].map { |word|
-      Digest::MD5.hexdigest(word).to_i(16)
-    }.map { |index| index % @filter_size }
+    [ word, word+"2", word+"3"].  map { |hash_word|
+        Digest::MD5.hexdigest(hash_word).to_i(16)
+      }.map { |index| index % @filter_size }
   end
 
   def update_index(category, index)
@@ -71,50 +71,56 @@ class Classifier
     @r.hincrby(scope_key, category_key(category), 1)
   end
 
-  def get_wordcount(category, word)
-    indexes(word).map { |index|
-      val = @r.getrange(category, index, index)
+  def feature_count(feature, category)
+    # TODO: Add funky caching: tha would keep the calculation code way easier to understand.
+    indexes(feature).map { |index|
+      val = @r.getrange(category_key(category), index, index)
       val.length > 0 ? val.getbyte(0) : 0
     }.min
   end
 
-  #############################
-  # BLOOMfilter - implementation
-
-  def bloom_result_for_word(word_count, category_count, totals)
-    return 0.0 unless category_count
-    word_prob = word_count.to_f / category_count.to_f
-
-    ((weight * ap) + (totals * word_prob)) / (weight + totals)
+  def total_feature_count feature
+    @categories.inject(0) { |sum, category_array| sum += feature_count(feature, category_array[0]) }
   end
 
-  def bloom_result(phrase)
-    words = phrase_to_words(phrase)
+  #############################
+  # Bayes - implementation
 
-    totals = Hash.new(0.0)
-    word_counts = {}
-    data = {}
+  def p_for_feature_in_category feature, category
+    feature_count(feature, category) / categories[category].to_f
+  end
 
-    @categories.each_key do |category|
-      word_counts[category] = Hash.new(0.0)
-      words.each { |word|
-        word_counts[category][word] = get_wordcount(category, word)
-        totals[word] += word_counts[category][word]
-      }
+  def p_for_feature_in_all_categories feature
+    total_feature_count(feature) / categories_total.to_f
+  end
+
+  def p_for_feature feature, category
+    p_total = p_for_feature_in_all_categories(feature)
+    p_feature = p_for_feature_in_category(feature, category)
+
+    ((weight * ap) + (p_total * p_feature)) / (weight + p_total)
+  end
+
+  def p_for_category features, category
+
+    ps = features.map { |feature| p_for_feature(feature, category) }
+    p_for_all_features = ps.inject(1.0) { |prod, p| prod *= p }
+    inverse_p_for_all_features = ps.inject(1.0) { |prod, p| prod *= (1.0 - p) }
+
+    p_for_all_features / (p_for_all_features + inverse_p_for_all_features)
+  end
+
+  def p_for_all features
+    result = {}
+    @categories.each do |category_array|
+      result[category_array[0]] = p_for_category(features, category_array[0])
     end
+    result
+  end
 
-    @categories.each_key do |category|
-      data[category] = words.inject(1.0) { |p, word|
-        p *= bloom_result_for_word(word_counts[category][word], categories[category], totals[word])
-      }
-      data[category] *= (categories / categories_total)
-    end
-
-    # normalize
-    max = data.values.max
-    max = 1.0/max
-    data.each_pair { |category, rank| data[category] *= max }
-    data
+  def result phrase
+    features = phrase_to_words(phrase)
+    p_for_all(features)
   end
 
 private
@@ -133,4 +139,8 @@ private
   def phrase_to_words(phrase)
     phrase.unpack('C*').pack('U*').gsub(/[^\w]/, " ").split.inject([]){|data, w| data << w.downcase}.uniq
   end
+end
+
+def c
+  bc = Classifier.new 'test'
 end
