@@ -17,10 +17,7 @@ module Bayes
 
     def result phrase
       features = phrase_to_features(phrase)
-      p_for_all(features)
-    end
 
-    def p_for_all features
       result = {}
       scope.categories.each do |category|
         result[category.name] = Calculator.new(category, features).calculate
@@ -29,6 +26,9 @@ module Bayes
     end
 
   private
+
+    # TODO
+    # * different feature extraction methods?
 
     def phrase_to_features(phrase)
       # TODO: unpack/pack - hack still needed?

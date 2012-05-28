@@ -8,6 +8,6 @@ module Bayes
 
 end
 
-def c
-  bc = Bayes::Classifier.new 'test', filter_size: 2**17, weight: 1.0, ap: 0.5
-end
+# def c
+#   bc = Bayes::Classifier.new 'test', filter_size: 2**17, weight: 1.0, ap: 0.5
+# end

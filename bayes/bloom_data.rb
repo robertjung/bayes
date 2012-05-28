@@ -43,7 +43,7 @@ module Bayes
       @r.getrange(key, index, index)
     end
 
-    # yeah, i know there is a race condition :/
+    # yeah, i know there is a race condition :/ guess this could be addressed by a "training-queue"
     # TODO: "compress"
     def update_at_index(index, by=1)
       oldvalue = get_at_index(index)
