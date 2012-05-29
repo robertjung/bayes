@@ -12,6 +12,13 @@ module Bayes
       @data = BloomData.new(scope, @category_key)
     end
 
+    def train(features)
+      features.each { |feature| update_feature(feature, 1) }
+      update_category(1)
+    end
+
+  private
+
     def update_category(by=1)
       data.update_category(@category_counter_key, by)
     end
@@ -22,11 +29,6 @@ module Bayes
 
     def feature_count(feature)
       data.feature_count(feature)
-    end
-
-    def train(features)
-      features.each { |feature| update_feature(feature, 1) }
-      update_category(1)
     end
   end
 end

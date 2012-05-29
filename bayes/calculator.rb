@@ -11,6 +11,16 @@ module Bayes
       @features = features
     end
 
+    def calculate
+      ps = features.map { |feature| p_for_feature(feature) }
+      p_for_all_features = ps.inject(1.0) { |prod, p| prod *= p }
+      inverse_p_for_all_features = ps.inject(1.0) { |prod, p| prod *= (1.0 - p) }
+
+      p_for_all_features / (p_for_all_features + inverse_p_for_all_features)
+    end
+
+  private
+
     def p_for_feature_in_category feature
       category.feature_count(feature) / category.value
     end
@@ -24,14 +34,6 @@ module Bayes
       p_feature = p_for_feature_in_category(feature)
 
       ((scope.weight * scope.ap) + (p_total * p_feature)) / (scope.weight + p_total)
-    end
-
-    def calculate
-      ps = features.map { |feature| p_for_feature(feature) }
-      p_for_all_features = ps.inject(1.0) { |prod, p| prod *= p }
-      inverse_p_for_all_features = ps.inject(1.0) { |prod, p| prod *= (1.0 - p) }
-
-      p_for_all_features / (p_for_all_features + inverse_p_for_all_features)
     end
   end
 end
