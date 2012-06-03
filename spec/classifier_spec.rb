@@ -52,12 +52,16 @@ module Bayes
     end
 
     describe "#result" do
-      let(:phrase) { "This is a test. A wonderful test!" }
-      let(:category) { "Spam" }
+      let(:features) { %w{ this is a test} }
 
       it "should extract features from given phrase" do
-        subject.should_receive(:phrase_to_features).with(phrase).and_return ["das", "ist"]
-        subject.result phrase
+        category = mock
+        category.stub!(:name).and_return "Spam"
+        calculator = mock
+        calculator.stub!(:calculate)
+        Scope.any_instance.should_receive(:categories).and_return([category])
+        Calculator.should_receive(:new).with(category, features).and_return(calculator)
+        subject.result features
       end
 
       it "should calculate rankings for all categories" do

@@ -7,7 +7,7 @@ module Bayes
       @r = scope.r
       @name = name
       @category_counter_key = "C:#{name}"
-      @category_key = "C:#{scope.user}:#{scope.key}:#{name}"
+      @category_key = "C:#{scope.user}:#{scope.name}:#{name}"
       @value = value
       @data = BloomData.new(scope, @category_key)
     end
@@ -15,6 +15,10 @@ module Bayes
     def train(features)
       features.each { |feature| update_feature(feature, 1) }
       update_category(1)
+    end
+
+    def feature_count(feature)
+      data.feature_count(feature)
     end
 
   private
@@ -25,10 +29,6 @@ module Bayes
 
     def update_feature(feature, by=1)
       data.update_feature(feature, by)
-    end
-
-    def feature_count(feature)
-      data.feature_count(feature)
     end
   end
 end

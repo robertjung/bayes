@@ -46,7 +46,9 @@ module Bayes
       @categories_total = sum_categories
     end
 
-    def create(options = {filter_size: BLOOMSIZE, weight: 1.0, ap: 0.5})
+    def create(options)
+      options = options.merge({filter_size: BLOOMSIZE, weight: 1.0, ap: 0.5})
+
       @weight = options[:weight]
       @ap = options[:ap]
       @filter_size = options[:filter_size]
