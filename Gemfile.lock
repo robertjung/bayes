@@ -5,6 +5,7 @@ GEM
     hiredis (0.4.5)
     mock_redis (0.4.1)
     nokogiri (1.5.3)
+    rake (0.9.2.2)
     redis (2.2.2)
     rspec (2.10.0)
       rspec-core (~> 2.10.0)
@@ -22,5 +23,6 @@ DEPENDENCIES
   hiredis
   mock_redis
   nokogiri
+  rake
   redis
   rspec
