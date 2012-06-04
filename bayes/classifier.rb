@@ -68,17 +68,17 @@ module Bayes
     def xliff_to_features(file)
       doc = Nokogiri::XML(File.open(file))
       features = Set.new
-      doc.css("source").each {|node| features.merge(extract(node.content)) }
+      doc.css("source").each {|node| features.merge(extract_words(node.content)) }
       features
     end
 
     def phrase_to_features(phrase)
-      # TODO: unpack/pack - hack still needed?
-      extract phrase
+      extract_words phrase
     end
 
-    def extract data
+    def extract_words data
       features = Set.new
+      # TODO: unpack/pack - hack still needed?
       data.unpack('C*').pack('U*').gsub(/[^\w]/, " ").split.each {|w| features.add w.downcase }
       features
     end
