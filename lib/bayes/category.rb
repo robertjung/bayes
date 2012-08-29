@@ -17,6 +17,10 @@ module Bayes
       update_category(1)
     end
 
+    def feature_count(feature)
+      data.feature_count(feature)
+    end
+
   private
 
     def update_category(by=1)
@@ -25,10 +29,6 @@ module Bayes
 
     def update_feature(feature, by=1)
       data.update_feature(feature, by)
-    end
-
-    def feature_count(feature)
-      data.feature_count(feature)
     end
   end
 end

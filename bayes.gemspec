@@ -5,7 +5,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Robert Jung"]
   gem.email         = ["rjung@mindslam.de"]
   gem.description   = %q{Bayes classifier built on counting bloomfilters stored in redis}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.summary       = %q{Kewl shit}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
