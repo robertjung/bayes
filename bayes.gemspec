@@ -15,11 +15,11 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Bayes::VERSION
 
-  s.add_dependency "hiredis"
-  s.add_dependency "redis"
-  s.add_dependency "rake"
-  s.add_dependency "nokogiri"
+  gem.add_dependency "hiredis"
+  gem.add_dependency "redis"
+  gem.add_dependency "rake"
+  gem.add_dependency "nokogiri"
 
-  s.add_test_dependency "rspec"
-  s.add_test_dependency "mock_redis"
+  gem.add_development_dependency "rspec"
+  gem.add_development_dependency "mock_redis"
 end
