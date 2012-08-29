@@ -27,7 +27,7 @@ module Bayes
 
     def best phrase
       r = result(phrase)
-      sorted = r.sort {|a,b| a[1]<=>b[1]}
+      sorted = r.sort {|a,b| b[1]<=>a[1]}
       (sorted[0][1] >= (sorted[1][1] * 1.1)) ? sorted[0][0] : nil
     end
 

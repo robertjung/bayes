@@ -30,7 +30,7 @@ module Bayes
       scope.indexes(feature).each do |index|
         val = get_at_index(index)
 
-        new_value = val.length > 0 ? val.getbyte(0) : 0
+        new_value = val.length > 0 ? val.bytes.to_a[0] : 0
         break if new_value.nil? || new_value <= 0
 
         old_value = new_value if old_value.nil? || old_value < new_value
