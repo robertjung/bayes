@@ -63,7 +63,7 @@ module Bayes
     end
 
     def load_categories scope_data
-      data.select{ |k,v| k =~ /^C:.*/ }.each_pair{ |k,v| @categories << Category.new(self, k.gsub(/C:/, ""), v.to_f) }
+      Hash[ data.select{ |k,v| k =~ /^C:.*/ }].each_pair{ |k,v| @categories << Category.new(self, k.gsub(/C:/, ""), v.to_f) }
     end
 
     def sum_categories
