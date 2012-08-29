@@ -48,7 +48,7 @@ module Bayes
     def update_at_index(index, by=1)
       oldvalue = get_at_index(index)
       value = by
-      value = oldvalue.getbyte(0) + by if oldvalue && oldvalue.length > 0
+      value = oldvalue.bytes.to_a[0] + by if oldvalue && oldvalue.length > 0
       @r.setrange(@key, index, value.chr)
     end
   end

@@ -5,7 +5,7 @@ module Bayes
 
     subject { Classifier.new(scopename, options) }
     let(:scopename) { 'test' }
-    let(:options) { { filter_size: 2**17, weight: 1.0, ap: 0.5 } }
+    let(:options) { { :filter_size => 2**17, :weight => 1.0, :ap => 0.5 } }
 
     describe "creation" do
       it "should create a Redis client object" do
