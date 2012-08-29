@@ -4,7 +4,7 @@ module Bayes
     attr_accessor :scope, :r
 
     def initialize(scope_name, options = {})
-      @r = Redis.new(host: "localhost", port: 6379)
+      @r = Redis.new(:host => "localhost", :port => 6379)
       @scope = Scope.new(scope_name, @r, options)
     end
 
