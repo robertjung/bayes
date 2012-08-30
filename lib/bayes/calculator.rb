@@ -12,7 +12,7 @@ module Bayes
     end
 
     def calculate
-      ps = features.map { |feature| p_for_feature(feature) }
+      ps = features.map { |feature| corrected_p_for_feature(feature) }
       p_for_all_features = ps.inject(1.0) { |prod, p| prod *= p }
       inverse_p_for_all_features = ps.inject(1.0) { |prod, p| prod *= (1.0 - p) }
 
@@ -30,10 +30,16 @@ module Bayes
     end
 
     def p_for_feature feature
-      p_total = p_for_feature_in_all_categories(feature)
-      p_feature = p_for_feature_in_category(feature)
+      p_for_feature_in_category(feature) / p_for_feature_in_all_categories(feature)
+    end
 
-      ((scope.weight * scope.ap) + (p_total * p_feature)) / (scope.weight + p_total)
+    def corrected_p_for_feature(feature)
+      p_feature = p_for_feature(feature)
+      feature_count = scope.total_feature_count(feature)
+      p_a_priori = scope.ap
+      strength = scope.weight
+
+      ((strength * p_a_priori) + (feature_count * p_feature)) / (strength + feature_count)
     end
   end
 end

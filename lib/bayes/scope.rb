@@ -38,8 +38,8 @@ module Bayes
   private
 
     def get(options)
-      @weight = options["weight"] || data["weight"].to_f
-      @ap = options["ap"] || data["ap"].to_f
+      @weight = options[:weight] || data["weight"].to_f
+      @ap = options[:ap] || data["ap"].to_f
       @filter_size = data["filter_size"].to_i
 
       load_categories data
@@ -47,7 +47,7 @@ module Bayes
     end
 
     def create(options = {})
-      options.merge!({ :filter_size => BLOOMSIZE, :weight => 1.0, :ap => 0.5 })
+      options = { :filter_size => BLOOMSIZE, :weight => 1.0, :ap => 0.5 }.merge options
       @weight = options[:weight]
       @ap = options[:ap]
       @filter_size = options[:filter_size]

@@ -16,7 +16,21 @@ module Bayes
     end
 
     def update_feature(feature, by=1)
-      scope.indexes(feature).each { |index| update_at_index(index, by) }
+      values = {}
+
+      # make sure, all indexes with same values are updated or not, at the same time
+      scope.indexes(feature).each do |index|
+        value = get_at_index(index)
+        values[value] ||= []
+        values[value] << index
+      end
+
+      values.each_pair do |value, indexes|
+        by = compress(value)
+        indexes.each do |index|
+          update_at_index(index, value + by) if by != 0
+        end
+      end
     end
 
     def feature_count(feature)
@@ -43,24 +57,17 @@ module Bayes
     end
 
     # yeah, i know there is a race condition :/ guess this could be addressed by a "training-queue"
-    def update_at_index(index, by=1)
-      value = get_at_index(index)
-      by = compress(value)
-      if by != 0
-        value = by + value
-        @r.setrange(@key, index, value.chr)
-      end
-      value
+    def update_at_index(index, value)
+      @r.setrange(@key, index, value.chr)
     end
 
     def compress(current)
       return 0 if current >= 255
-      chance = 12.645916636849323 / (1.01**current - 1.0)
+      chance = (1.01**current - 1.0) / 12.645916636849323
       rand <= chance ? 1 : 0
     end
 
     def decompress(value)
-      return 0 unless value && value.length > 0
       0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round.to_i
     end
   end
