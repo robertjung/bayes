@@ -25,10 +25,10 @@ module Bayes
       result
     end
 
-    def best phrase
+    def best phrase, minimal_difference = 1.1
       r = result(phrase)
       sorted = r.sort {|a,b| b[1]<=>a[1]}
-      (sorted[0][1] >= (sorted[1][1] * 1.1)) ? sorted[0][0] : nil
+      (sorted[0][1] >= (sorted[1][1] * minimal_difference)) ? sorted[0][0] : nil
     end
 
   private
@@ -38,6 +38,7 @@ module Bayes
 
     def phrase_to_features(phrase)
       # TODO: unpack/pack - hack still needed?
+      # TODO: Umlaute & shit
       phrase.unpack('C*').pack('U*').gsub(/[^\w]/, " ").split.inject([]){|data, w| data << w.downcase}.uniq
     end
   end

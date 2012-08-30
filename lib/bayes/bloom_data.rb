@@ -38,18 +38,27 @@ module Bayes
       old_value || 0
     end
 
-    # TODO: "de-compress"
     def get_at_index(index)
-      @r.getrange(key, index, index)
+      v = @r.getrange(key, index, index)
+      decompress v
     end
 
     # yeah, i know there is a race condition :/ guess this could be addressed by a "training-queue"
-    # TODO: "compress"
     def update_at_index(index, by=1)
       oldvalue = get_at_index(index)
-      value = by
-      value = oldvalue.bytes.to_a[0] + by if oldvalue && oldvalue.length > 0
+      by = compress(by)
+      value = by + ((oldvalue && oldvalue.length > 0) ?  oldvalue.bytes.to_a[0] : 0 )
       @r.setrange(@key, index, value.chr)
+    end
+
+    def compress(current)
+      return 0 if current >= 255
+      chance = 12.645916636849323 / (1.01**current - 1.0)
+      rand >= chance ? 1 : 0
+    end
+
+    def decompress(value)
+      0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round
     end
   end
 end
