@@ -29,18 +29,16 @@ module Bayes
       old_value = nil
       scope.indexes(feature).each do |index|
         val = get_at_index(index)
+        val = decompress val
+        break if val <= 0
 
-        new_value = val.length > 0 ? val.bytes.to_a[0] : 0
-        break if new_value.nil? || new_value <= 0
-
-        old_value = new_value if old_value.nil? || old_value < new_value
+        old_value = val if old_value.nil? || old_value < val
       end
       old_value || 0
     end
 
     def get_at_index(index)
       v = @r.getrange(key, index, index)
-      decompress v
     end
 
     # yeah, i know there is a race condition :/ guess this could be addressed by a "training-queue"
@@ -58,7 +56,8 @@ module Bayes
     end
 
     def decompress(value)
-      0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round
+      return 0 unless value && value.length > 0
+      0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round.to_i
     end
   end
 end
