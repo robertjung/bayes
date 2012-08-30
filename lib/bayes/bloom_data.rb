@@ -39,7 +39,7 @@ module Bayes
 
     def get_at_index(index)
       v = @r.getrange(key, index, index)
-      (v && v.length > 0) ? v : 0
+      (v && v.length > 0) ? v.bytes.to_a[0] : 0
     end
 
     # yeah, i know there is a race condition :/ guess this could be addressed by a "training-queue"
