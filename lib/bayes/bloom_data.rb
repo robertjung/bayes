@@ -46,7 +46,7 @@ module Bayes
         val = decompress val
         break if val <= 0
 
-        old_value = val if old_value.nil? || old_value < val
+        old_value = val if old_value.nil? || old_value > val
       end
       old_value || 0
     end
@@ -63,12 +63,13 @@ module Bayes
 
     def compress(current)
       return 0 if current >= 255
+      return 1 if current == 0
       chance = (1.01**current - 1.0) / 12.645916636849323
-      rand <= chance ? 1 : 0
+      rand >= chance ? 1 : 0
     end
 
     def decompress(value)
-      0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round.to_i
+      0.upto(value).inject(0){|sum, i| sum += (1.01**i) }.round.to_i - 1
     end
   end
 end

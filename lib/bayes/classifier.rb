@@ -19,10 +19,11 @@ module Bayes
       features = phrase_to_features(phrase)
 
       result = {}
-      scope.categories.each do |category|
-        result[category.name] = Calculator.new(category, features).calculate
+      {}.tap do |result|
+        scope.categories.each do |category|
+          result[category.name] = Calculator.new(category, features).calculate
+        end
       end
-      result
     end
 
     def best phrase, minimal_difference = 1.1

@@ -1,7 +1,7 @@
 module Bayes
   class Scope
     BLOOMSIZE = 2**17
-    attr_accessor :filter_size, :categories, :categories_total, :weight, :ap, :r, :name, :user, :data, :key
+    attr_accessor :filter_size, :categories, :categories_total, :weight, :r, :name, :user, :data, :key
 
     def initialize(name, r, options = {})
       @name = name
@@ -39,7 +39,6 @@ module Bayes
 
     def get(options)
       @weight = options[:weight] || data["weight"].to_f
-      @ap = options[:ap] || data["ap"].to_f
       @filter_size = data["filter_size"].to_i
 
       load_categories data
@@ -47,9 +46,8 @@ module Bayes
     end
 
     def create(options = {})
-      options = { :filter_size => BLOOMSIZE, :weight => 1.0, :ap => 0.5 }.merge options
+      options = { :filter_size => BLOOMSIZE, :weight => 1.0 }.merge options
       @weight = options[:weight]
-      @ap = options[:ap]
       @filter_size = options[:filter_size]
 
       save
@@ -58,8 +56,7 @@ module Bayes
     def save
       @r.hmset(key,
                "filter_size", @filter_size,
-               "weight", @weight,
-               "ap", @ap)
+               "weight", @weight)
     end
 
     def load_categories scope_data
