@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    bayes (0.1.0)
+    bayes (0.1.1)
       hiredis
       nokogiri
       rake

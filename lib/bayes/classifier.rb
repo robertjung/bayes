@@ -40,7 +40,13 @@ module Bayes
     def phrase_to_features(phrase)
       # TODO: unpack/pack - hack still needed?
       # TODO: Umlaute & shit
-      phrase.unpack('C*').pack('U*').gsub(/[^\w]/, " ").split.inject([]){|data, w| data << w.downcase}.uniq
+      phrase.
+        unpack('C*').
+        pack('U*').
+        gsub(/[\.,-_\?!#\s\(\)\{\}\[\]\|\<\>\"\']/, " ").
+        split.
+        inject([]){|data, w| data << w.downcase}.
+        uniq
     end
   end
 end

@@ -33,7 +33,8 @@ module Bayes
 
       return nil unless p_cat >= 0.0 && p_total >= 0.0
 
-      p_cat / p_total
+      result = p_cat / p_total
+      [[0.0, result].max, 1.0].min
     end
 
     def feature_count(feature)
