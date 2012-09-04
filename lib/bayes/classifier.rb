@@ -43,9 +43,10 @@ module Bayes
       phrase.
         unpack('C*').
         pack('U*').
-        gsub(/[\.,-_\?!#\s\(\)\{\}\[\]\|\<\>\"\']/, " ").
+        downcase.
+        gsub(/[\.,-_\?!#\s(){}|\<\>\"\']/, " ").
         split.
-        inject([]){|data, w| data << w.downcase}.
+        inject([]){|data, w| data << w}.
         uniq
     end
   end
